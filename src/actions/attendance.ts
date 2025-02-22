@@ -3,7 +3,7 @@
 import { z } from "zod";
 import type { ActionResponse, AttendanceFormData } from "@/types/attendance";
 import { prisma } from "@/lib/prisma";
-import { Student } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 const attendanceSchema = z.object({
   code: z.coerce.number().int(),
@@ -75,7 +75,7 @@ export async function getStudentOptions(): Promise<
 > {
   try {
     const students = await prisma.student.findMany();
-    const studentOptions = students.map((student: Student) => ({
+    const studentOptions = students.map((student: { id: number; name: string }) => ({
       value: student.name,
       label: student.name,
     }));
