@@ -1,5 +1,4 @@
 "use server";
-
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
@@ -23,6 +22,8 @@ const AttendanceSchema = z.object({
   event: EventSchema,
 });
 
+const AttendanceArraySchema = z.array(AttendanceSchema);
+
 export type Student = z.infer<typeof StudentSchema>;
 export type Event = z.infer<typeof EventSchema>;
 export type Attendance = z.infer<typeof AttendanceSchema>;
@@ -30,8 +31,7 @@ export type Attendance = z.infer<typeof AttendanceSchema>;
 export async function getAttendance(eventCode: string) {
   try {
     const validatedEventCode = z.coerce.number().positive().parse(eventCode);
-    
-    const attendance = await prisma.attendance.findFirst({
+    const attendance = await prisma.attendance.findMany({
       where: {
         eventId: validatedEventCode,
       },
@@ -40,8 +40,12 @@ export async function getAttendance(eventCode: string) {
         event: true,
       },
     });
+    
+    if (!attendance || attendance.length === 0) {
+      return [];
+    }
 
-    return attendance ? AttendanceSchema.parse(attendance) : null;
+    return AttendanceArraySchema.parse(attendance);
   } catch (error) {
     if (error instanceof z.ZodError) {
       throw new Error(`Validation error: ${error.message}`);
