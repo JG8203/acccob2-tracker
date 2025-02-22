@@ -1,0 +1,72 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+const studentNames = [
+  'AGUIRRE, RUFINO LUIS GARCIA',
+  'BAUTISTA, DIMITRI CEDRIC TAN',
+  'BRITANICO, JEANNE NICOLE PANAMBO',
+  'CALIBOT, PIERRE DOMINIC PANTOJA',
+  'CANO, ELLAIZA JOYCE CAYAS',
+  'CAPACITE, SEAN JOSHUA TY',
+  'CECILIO, JUSTIN DIEGO PAGUNSAN',
+  'CHAN, KEVIN FERNANDEZ',
+  'CHONG, BRENALAINE SOPHIA CHUA',
+  'CO, MARC BRYAN TAN',
+  'CRUZ, JOSHUA SAMUEL IBANEZ',
+  'DELOS REYES, JACK LUIS DEL MUNDO',
+  'DOLLENTE, CARLOS ALFONSO LOVENDINO',
+  'GILO, JOSHUA ARMAINE GERZAN',
+  'GONZALES, JUAN RAFAEL MORANDO',
+  'GONZALEZ, RAFAEL MIGUEL REMO',
+  'GUTIERREZ, AALIYAH CABRERA',
+  'KIM, DONG CHAN',
+  'LI, JEDRICK STEPHEN TAN',
+  'LIMCACO, CONRAD CASTILLO',
+  'LIN, PETER CRUZ',
+  'MANALANG, JOHNKELLY DELA CRUZ',
+  'MOLINAR, RICHARD JR. MANRIZA',
+  'MONCADA, RENEE SABENE GERONIMO',
+  'NOCOM, MARIANNE ROSHAINE PATAGNAN',
+  'OCAMPO TAN, ABRAHAM QUE',
+  'OLIVAS, PIO AUSTRIA',
+  'ONG, ANDREA BETTINA MERCADO',
+  'ONG, JAZLYN GRACE ONG',
+  'PARK, WUNGGI',
+  'PASCUAL, CHARMELLE APRIL TANAWIT',
+  'PEREZ, VAN SATRIANI RANAO',
+  'RAMOS, ESTIFANO JOSHUA TADEO',
+  'REQUIDAN, HANZ DENZEL VERGARA',
+  'SAMSON, FRANCIS LINUS CARBONELL',
+  'SEE, GABRIEL TRENT TAN',
+  'SINGSON, VIVIENNE MARIE GABRIELLE ROMERO',
+  'SO, KIMI BOBBI BLITHE NGO',
+  'SONGALIA, ANDREA DEL ROSARIO',
+  'TUPAS, CARLO MARTIN CANDO',
+  'UY, CARL OLIVER GALES',
+  'WANG, JOMAR MEJIA',
+  'XU, XIAO XUAN YANG'
+];
+
+async function main() {
+  console.log('Starting to seed student data...');
+
+  for (const name of studentNames) {
+    await prisma.student.create({
+      data: {
+        name: name,
+      },
+    });
+  }
+
+  console.log('Seeding completed successfully!');
+}
+
+main()
+  .catch((e) => {
+    console.error('Error seeding data:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

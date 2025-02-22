@@ -1,101 +1,134 @@
+"use client";
+
+import * as React from "react";
+import { useActionState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { submitAttendance, getStudentOptions } from "@/actions/attendance";
+import { CheckCircle2 } from "lucide-react";
+import type { ActionResponse } from "@/types/attendance";
+import Combobox from "@/components/ui/combobox";
 import Image from "next/image";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+const initialState: ActionResponse = {
+  success: false,
+  message: "",
+};
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+export default function AttendanceForm() {
+  const [state, action, isPending] = useActionState(
+    submitAttendance,
+    initialState
+  );
+  const [studentOptions, setStudentOptions] = React.useState<{ value: string; label: string }[]>([]);
+  const [student, setStudent] = React.useState<string>("");
+
+  React.useEffect(() => {
+    const fetchStudentOptions = async () => {
+      const options = await getStudentOptions();
+      setStudentOptions(options);
+    };
+
+    fetchStudentOptions();
+
+    const storedStudent = localStorage.getItem('student');
+    if (storedStudent) {
+      try {
+        const parsedStudent = JSON.parse(storedStudent);
+        setStudent(parsedStudent);
+      } catch (error) {
+        console.error('Error parsing stored student:', error);
+      }
+    }
+  }, []);
+
+  // Update localStorage when student changes
+  React.useEffect(() => {
+    if (student) {
+      localStorage.setItem('student', JSON.stringify(student));
+    }
+  }, [student]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-lg">
+        <CardHeader>
+          <CardTitle>ACCCOB2 Attendance Tracker</CardTitle>
+          <CardDescription>
+            Ang hirap mag-encode ng attendance sa Excel 🥲
+          </CardDescription>
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            src={
+              "https://media1.tenor.com/m/ce1bT7v09f4AAAAd/white-dog-shaking.gif"
+            }
+            width={500}
+            height={500}
+            alt="dog gif"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </CardHeader>
+        <CardContent>
+          <form action={action} className="space-y-6" autoComplete="on">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="code">Code</Label>
+                <Input
+                  id="code"
+                  name="code"
+                  placeholder="See yellow pad for code."
+                  required
+                  aria-describedby="code-error"
+                  className={state?.errors?.code ? "border-red-500" : ""}
+                />
+                {state?.errors?.code && (
+                  <p id="code-error" className="text-sm text-red-500">
+                    {state.errors.code[0]}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Combobox
+                  name="name"
+                  options={studentOptions}
+                  searchPlaceholder="Enter any part of your name (e.g., 'Joshua' or 'Armaine')"
+                  aria-describedby="name-error"
+                  className={`w-full ${
+                    state?.errors?.name ? "border-red-500" : ""
+                  }`}
+                  value={student}
+                  onChange={setStudent}
+                />
+                {state?.errors?.name && (
+                  <p id="name-error" className="text-sm text-red-500">
+                    {state.errors.name[0]}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {state?.message && (
+              <Alert variant={state.success ? "default" : "destructive"}>
+                {state.success && <CheckCircle2 className="h-4 w-4" />}
+                <AlertDescription>{state.message}</AlertDescription>
+              </Alert>
+            )}
+
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? "Registering..." : "Register"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
