@@ -2,31 +2,16 @@
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
-const StudentSchema = z.object({
-  id: z.number(),
-  name: z.string().min(1),
-});
+export type Student = {
+  id: number;
+  name: string;
+};
 
-const EventSchema = z.object({
-  id: z.number(),
-  date: z.date(),
-  label: z.string().nullable(),
-});
-
-const AttendanceSchema = z.object({
-  id: z.number(),
-  studentId: z.number(),
-  eventId: z.number(),
-  timestamp: z.date(),
-  student: StudentSchema,
-  event: EventSchema,
-});
-
-const AttendanceArraySchema = z.array(AttendanceSchema);
-
-export type Student = z.infer<typeof StudentSchema>;
-export type Event = z.infer<typeof EventSchema>;
-export type Attendance = z.infer<typeof AttendanceSchema>;
+export type Event = {
+  id: number;
+  date: Date;
+  label: string | null;
+};
 
 export async function getAttendance(eventCode: string) {
   try {
