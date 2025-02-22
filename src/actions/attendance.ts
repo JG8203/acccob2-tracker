@@ -3,7 +3,6 @@
 import { z } from "zod";
 import type { ActionResponse, AttendanceFormData } from "@/types/attendance";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
 
 const attendanceSchema = z.object({
   code: z.coerce.number().int(),
