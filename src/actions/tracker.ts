@@ -31,21 +31,35 @@ export type Attendance = z.infer<typeof AttendanceSchema>;
 export async function getAttendance(eventCode: string) {
   try {
     const validatedEventCode = z.coerce.number().positive().parse(eventCode);
-    const attendance = await prisma.attendance.findMany({
-      where: {
-        eventId: validatedEventCode,
-      },
-      include: {
-        student: true,
-        event: true,
+
+    const studentsWithAttendanceStatus = await prisma.student.findMany({
+      select: {
+        id: true,
+        name: true,
+        attendance: {
+          where: {
+            eventId: validatedEventCode,
+          },
+          select: {
+            event: {
+              select: {
+                date: true,
+                label: true,
+              },
+            },
+          },
+        },
       },
     });
-    
-    if (!attendance || attendance.length === 0) {
-      return [];
-    }
 
-    return AttendanceArraySchema.parse(attendance);
+    const formattedResults = studentsWithAttendanceStatus.map(student => ({
+      id: student.id,
+      name: student.name,
+      attended: student.attendance.length > 0,
+      eventInfo: student.attendance[0]?.event || null,
+    }));
+
+    return formattedResults;
   } catch (error) {
     if (error instanceof z.ZodError) {
       throw new Error(`Validation error: ${error.message}`);
