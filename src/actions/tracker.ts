@@ -23,10 +23,6 @@ const AttendanceSchema = z.object({
   event: EventSchema,
 });
 
-const SearchQuerySchema = z.object({
-  query: z.string().min(1).max(100),
-});
-
 export type Student = z.infer<typeof StudentSchema>;
 export type Event = z.infer<typeof EventSchema>;
 export type Attendance = z.infer<typeof AttendanceSchema>;
