@@ -42,6 +42,21 @@ export async function submitAttendance(
       };
     }
 
+    // Check if an attendance record already exists for this student and event
+    const existingAttendance = await prisma.attendance.findFirst({
+      where: {
+        studentId: student.id,
+        eventId: validatedData.data.code,
+      },
+    });
+
+    if (existingAttendance) {
+      return {
+        success: false,
+        message: `${validatedData.data.name} is already registered for event ${validatedData.data.code} 😔`,
+      };
+    }
+
     const attendance = await prisma.attendance.create({
       data: {
         studentId: student.id,
