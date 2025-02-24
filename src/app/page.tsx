@@ -151,9 +151,9 @@ export default function AttendanceForm() {
               <SignatureCanvas
                 penColor="green"
                 canvasProps={{
-                  width: 200,
-                  height: 150,
-                  className: "sigCanvas border-2",
+                  width: "100%",
+                  height: "auto",
+                  className: "sigCanvas border-2 w-full aspect-[3/2]",
                 }}
                 ref={signCanvasRef}
                 onEnd={handleGenerate}
