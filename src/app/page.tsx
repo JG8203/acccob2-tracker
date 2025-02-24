@@ -51,7 +51,6 @@ export default function AttendanceForm() {
     }
   }, []);
 
-  // Update localStorage when student changes
   React.useEffect(() => {
     if (student) {
       localStorage.setItem('student', JSON.stringify(student));
@@ -107,6 +106,7 @@ export default function AttendanceForm() {
                   }`}
                   value={student}
                   onChange={setStudent}
+                  placeholder="Select a student"
                 />
                 {state?.errors?.name && (
                   <p id="name-error" className="text-sm text-red-500">

@@ -76,7 +76,7 @@ const Combobox = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent className={className}>
-          <Command className="min-w-[550px]">
+          <Command className="w-full md:w-auto flex-grow md:flex-grow-0 max-h-[150px] overflow-y-auto">
             <CommandInput placeholder={searchPlaceholder} />
             <CommandList>
               <CommandEmpty>{emptyMessage}</CommandEmpty>
