@@ -29,7 +29,9 @@ export default function AttendanceForm() {
     submitAttendance,
     initialState
   );
-  const [studentOptions, setStudentOptions] = React.useState<{ value: string; label: string }[]>([]);
+  const [studentOptions, setStudentOptions] = React.useState<
+    { value: string; label: string }[]
+  >([]);
   const [student, setStudent] = React.useState<string>("");
 
   React.useEffect(() => {
@@ -40,20 +42,20 @@ export default function AttendanceForm() {
 
     fetchStudentOptions();
 
-    const storedStudent = localStorage.getItem('student');
+    const storedStudent = localStorage.getItem("student");
     if (storedStudent) {
       try {
         const parsedStudent = JSON.parse(storedStudent);
         setStudent(parsedStudent);
       } catch (error) {
-        console.error('Error parsing stored student:', error);
+        console.error("Error parsing stored student:", error);
       }
     }
   }, []);
 
   React.useEffect(() => {
     if (student) {
-      localStorage.setItem('student', JSON.stringify(student));
+      localStorage.setItem("student", JSON.stringify(student));
     }
   }, [student]);
 
@@ -65,19 +67,21 @@ export default function AttendanceForm() {
           <CardDescription>
             Ang hirap mag-encode ng attendance sa Excel 🥲
           </CardDescription>
+          <div className="flex justify-center space-y-2">
           <Image
             src={
               "https://media1.tenor.com/m/ce1bT7v09f4AAAAd/white-dog-shaking.gif"
             }
-            width={500}
-            height={500}
+            width={300}
+            height={300}
             alt="dog gif"
           />
+          </div>
         </CardHeader>
         <CardContent>
-          <form action={action} className="space-y-6" autoComplete="on">
-            <div className="space-y-4">
-              <div className="space-y-2">
+          <form action={action} className="space-y-2" autoComplete="on">
+            <div className="">
+              <div className="">
                 <Label htmlFor="code">Code</Label>
                 <Input
                   id="code"
