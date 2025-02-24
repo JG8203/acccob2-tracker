@@ -1,6 +1,7 @@
 export interface AttendanceFormData {
   name: string;
   code: string;
+  signature: string; 
 }
 
 export interface ActionResponse {

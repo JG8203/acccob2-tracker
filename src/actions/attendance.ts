@@ -1,12 +1,13 @@
 "use server";
-
 import { z } from "zod";
 import type { ActionResponse, AttendanceFormData } from "@/types/attendance";
 import { prisma } from "@/lib/prisma";
 
+// Update the schema to include the `signature` field
 const attendanceSchema = z.object({
   code: z.coerce.number().int(),
   name: z.string().min(1),
+  signature: z.string().min(1), // Ensure the signature is provided
 });
 
 export async function submitAttendance(
@@ -14,13 +15,14 @@ export async function submitAttendance(
   formData: FormData
 ): Promise<ActionResponse> {
   try {
+    // Extract and validate form data
     const rawData: AttendanceFormData = {
       name: formData.get("name") as string,
       code: formData.get("code") as string,
+      signature: formData.get("signature") as string, // Include the signature
     };
 
     const validatedData = attendanceSchema.safeParse(rawData);
-
     if (!validatedData.success) {
       return {
         success: false,
@@ -29,6 +31,10 @@ export async function submitAttendance(
       };
     }
 
+    // Log the signature to the console
+    console.log("Signature Data:", validatedData.data.signature);
+
+    // Find the student by name
     const student = await prisma.student.findFirst({
       where: {
         name: validatedData.data.name,
@@ -57,6 +63,7 @@ export async function submitAttendance(
       };
     }
 
+    // Create the attendance record (without storing the signature in the DB for now)
     const attendance = await prisma.attendance.create({
       data: {
         studentId: student.id,

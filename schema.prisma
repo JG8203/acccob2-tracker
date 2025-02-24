@@ -21,14 +21,15 @@ model Event {
 }
 
 model Attendance {
-  id        Int      @id @default(autoincrement())
-  student   Student  @relation(fields: [studentId], references: [id])
-  studentId Int
-  event     Event    @relation(fields: [eventId], references: [id])
-  eventId   Int
-  timestamp DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  student      Student  @relation(fields: [studentId], references: [id])
+  studentId    Int
+  event        Event    @relation(fields: [eventId], references: [id])
+  eventId      Int
+  timestamp    DateTime @default(now())
+  signatureURL String?  @default("")
 
-  @@unique([studentId, eventId]) 
+  @@unique([studentId, eventId])
   @@index([studentId])
   @@index([eventId])
 }

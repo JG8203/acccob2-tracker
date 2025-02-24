@@ -21,37 +21,55 @@ import SignatureCanvas from "react-signature-canvas";
 const initialState: ActionResponse = { success: false, message: "" };
 
 export default function AttendanceForm() {
-  const [state, action, isPending] = useActionState(submitAttendance, initialState);
-  const [studentOptions, setStudentOptions] = React.useState<{ value: string; label: string }[]>([]);
+  async function formAction(currentState: ActionResponse, formData: FormData) {
+    if (signCanvasRef.current) {
+      const currentDataURL = signCanvasRef.current
+        .getTrimmedCanvas()
+        .toDataURL("image/png");
+
+      if (currentDataURL === initialCanvasState) {
+        return {
+          success: false,
+          message: "No changes detected in the signature canvas.",
+        };
+      }
+
+      formData.append("signature", currentDataURL);
+      return await submitAttendance(currentState, formData);
+    }
+    return { success: false, message: "Signature canvas not initialized" };
+  }
+
+  const [state, action, isPending] = useActionState(formAction, initialState);
+
+  const [studentOptions, setStudentOptions] = React.useState<
+    { value: string; label: string }[]
+  >([]);
   const [student, setStudent] = React.useState<string>("");
   const [signURL, setSignURL] = React.useState<string>("");
-  const [initialCanvasState, setInitialCanvasState] = React.useState<string | null>(null); // To store the initial canvas state
+  const [initialCanvasState, setInitialCanvasState] = React.useState<
+    string | null
+  >(null);
   const signCanvasRef = React.useRef<SignatureCanvas | null>(null);
 
-  // Capture the initial state of the canvas when the component mounts
   React.useEffect(() => {
     if (signCanvasRef.current) {
-      const initialDataURL = signCanvasRef.current.getTrimmedCanvas().toDataURL("image/png");
-      setInitialCanvasState(initialDataURL); // Store the initial state
+      const initialDataURL = signCanvasRef.current
+        .getTrimmedCanvas()
+        .toDataURL("image/png");
+      setInitialCanvasState(initialDataURL);
     }
   }, []);
 
-  // Function to check if the canvas has been modified
-  const isCanvasModified = (): boolean => {
-    if (!signCanvasRef.current || !initialCanvasState) return false;
-    const currentDataURL = signCanvasRef.current.getTrimmedCanvas().toDataURL("image/png");
-    return currentDataURL !== initialCanvasState; // Compare current state with initial state
-  };
-
-  // Function to generate the signature image and update the form
   const handleGenerate = () => {
     if (signCanvasRef.current) {
-      const trimmedDataURL = signCanvasRef.current.getTrimgedCanvas().toDataURL("image/png");
+      const trimmedDataURL = signCanvasRef.current
+        .getTrimmedCanvas()
+        .toDataURL("image/png");
       setSignURL(trimmedDataURL);
     }
   };
 
-  // Fetch student options and restore stored student on mount
   React.useEffect(() => {
     const fetchStudentOptions = async () => {
       try {
@@ -73,9 +91,10 @@ export default function AttendanceForm() {
     }
   }, []);
 
-  // Save selected student to localStorage
   React.useEffect(() => {
-    if (student) localStorage.setItem("student", JSON.stringify(student));
+    if (student) {
+      localStorage.setItem("student", JSON.stringify(student));
+    }
   }, [student]);
 
   return (
@@ -83,19 +102,12 @@ export default function AttendanceForm() {
       <Card className="w-full max-w-lg">
         <CardHeader>
           <CardTitle>ACCCOB2 Attendance Tracker</CardTitle>
-          <CardDescription>Ang hirap mag-encode ng attendance sa Excel 🥲</CardDescription>
+          <CardDescription>
+            Ang hirap mag-encode ng attendance sa Excel 🥲
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form
-            action={(formData) => {
-              if (isCanvasModified()) {
-                formData.append("signature", signURL);
-              }
-              action(formData); 
-            }}
-            className="space-y-6"
-            autoComplete="on"
-          >
+          <form action={action} className="space-y-6" autoComplete="on">
             <div className="space-y-2">
               <Label htmlFor="code">Code</Label>
               <Input
@@ -112,6 +124,7 @@ export default function AttendanceForm() {
                 </p>
               )}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Combobox
@@ -119,7 +132,9 @@ export default function AttendanceForm() {
                 options={studentOptions}
                 searchPlaceholder="Enter any part of your name (e.g., 'Joshua' or 'Armaine')"
                 aria-describedby="name-error"
-                className={`w-full ${state?.errors?.name ? "border-red-500" : ""}`}
+                className={`w-full ${
+                  state?.errors?.name ? "border-red-500" : ""
+                }`}
                 value={student}
                 onChange={setStudent}
                 placeholder="Select a student"
@@ -130,21 +145,28 @@ export default function AttendanceForm() {
                 </p>
               )}
             </div>
+
             <div className="space-y-2">
               <p className="text-2xl font-bold">Sign here:</p>
               <SignatureCanvas
                 penColor="green"
-                canvasProps={{ width: 200, height: 150, className: "sigCanvas border-2" }}
-                ref={(ref) => (signCanvasRef.current = ref)}
+                canvasProps={{
+                  width: 200,
+                  height: 150,
+                  className: "sigCanvas border-2",
+                }}
+                ref={signCanvasRef}
                 onEnd={handleGenerate}
               />
             </div>
+
             {state?.message && (
               <Alert variant={state.success ? "default" : "destructive"}>
                 {state.success && <CheckCircle2 className="h-4 w-4" />}
                 <AlertDescription>{state.message}</AlertDescription>
               </Alert>
             )}
+
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending ? "Registering..." : "Register"}
             </Button>
