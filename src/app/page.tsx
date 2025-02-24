@@ -18,6 +18,7 @@ import { CheckCircle2 } from "lucide-react";
 import type { ActionResponse } from "@/types/attendance";
 import Combobox from "@/components/ui/combobox";
 // import Image from "next/image";
+import SignatureCanvas from "react-signature-canvas";
 
 const initialState: ActionResponse = {
   success: false,
@@ -29,7 +30,9 @@ export default function AttendanceForm() {
     submitAttendance,
     initialState
   );
-  const [studentOptions, setStudentOptions] = React.useState<{ value: string; label: string }[]>([]);
+  const [studentOptions, setStudentOptions] = React.useState<
+    { value: string; label: string }[]
+  >([]);
   const [student, setStudent] = React.useState<string>("");
 
   React.useEffect(() => {
@@ -40,20 +43,20 @@ export default function AttendanceForm() {
 
     fetchStudentOptions();
 
-    const storedStudent = localStorage.getItem('student');
+    const storedStudent = localStorage.getItem("student");
     if (storedStudent) {
       try {
         const parsedStudent = JSON.parse(storedStudent);
         setStudent(parsedStudent);
       } catch (error) {
-        console.error('Error parsing stored student:', error);
+        console.error("Error parsing stored student:", error);
       }
     }
   }, []);
 
   React.useEffect(() => {
     if (student) {
-      localStorage.setItem('student', JSON.stringify(student));
+      localStorage.setItem("student", JSON.stringify(student));
     }
   }, [student]);
 
@@ -115,6 +118,13 @@ export default function AttendanceForm() {
                 )}
               </div>
             </div>
+            <div className="text-2xl font-bold">
+              <p className="">Sign here:</p>
+            </div>
+            <SignatureCanvas
+              penColor="green"
+              canvasProps={{ width: 400, height: 200, className: "sigCanvas border-2" }}
+            />
 
             {state?.message && (
               <Alert variant={state.success ? "default" : "destructive"}>
