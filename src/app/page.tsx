@@ -17,7 +17,7 @@ import { submitAttendance, getStudentOptions } from "@/actions/attendance";
 import { CheckCircle2 } from "lucide-react";
 import type { ActionResponse } from "@/types/attendance";
 import Combobox from "@/components/ui/combobox";
-import Image from "next/image";
+// import Image from "next/image";
 
 const initialState: ActionResponse = {
   success: false,
