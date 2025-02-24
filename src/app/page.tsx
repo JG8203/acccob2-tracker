@@ -60,7 +60,7 @@ export default function AttendanceForm() {
   }, [student]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 max-h-full">
+    <div className="min-h-screen flex items-center justify-center p-4 max-h-fit overscroll-y-contain">
       <Card className="w-full max-w-lg">
         <CardHeader>
           <CardTitle>ACCCOB2 Attendance Tracker</CardTitle>
