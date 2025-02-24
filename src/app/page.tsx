@@ -65,14 +65,14 @@ export default function AttendanceForm() {
           <CardDescription>
             Ang hirap mag-encode ng attendance sa Excel 🥲
           </CardDescription>
-          <Image
+          {/* <Image
             src={
               "https://media1.tenor.com/m/ce1bT7v09f4AAAAd/white-dog-shaking.gif"
             }
             width={500}
             height={500}
             alt="dog gif"
-          />
+          /> */}
         </CardHeader>
         <CardContent>
           <form action={action} className="space-y-6" autoComplete="on">
