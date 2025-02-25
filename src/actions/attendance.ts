@@ -57,17 +57,14 @@ export async function submitAttendance(
       };
     }
 
-    // Convert data URL to File object for uploading
     const signatureDataURL = validatedData.data.signature;
     const base64Data = signatureDataURL.split(',')[1];
     const signatureBuffer = Buffer.from(base64Data, 'base64');
     
-    // Create a File object from the buffer
     const signatureFile = new File([signatureBuffer], `signature-${student.id}-${validatedData.data.code}.png`, {
       type: 'image/png',
     });
 
-    // Upload the signature to UploadThing
     const uploadResult = await utapi.uploadFiles(signatureFile);
     
     if (!uploadResult.data) {
@@ -77,7 +74,6 @@ export async function submitAttendance(
       };
     }
 
-    // Create attendance record with signature URL
     const attendance = await prisma.attendance.create({
       data: {
         studentId: student.id,

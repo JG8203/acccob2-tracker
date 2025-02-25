@@ -16,15 +16,15 @@ import { submitAttendance, getStudentOptions } from "@/actions/attendance";
 import { CheckCircle2, Eraser } from "lucide-react";
 import type { ActionResponse } from "@/types/attendance";
 import Combobox from "@/components/ui/combobox";
-import SignatureCanvas from "react-signature-canvas";
+import SignaturePad, { SignaturePadRef } from "@/components/ui/signaturepad";
 
 const initialState: ActionResponse = { success: false, message: "" };
 
 export default function AttendanceForm() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const signCanvasRef = useRef<SignatureCanvas | null>(null);
+  const signCanvasRef = useRef<SignaturePadRef | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  
+
   async function formAction(currentState: ActionResponse, formData: FormData) {
     if (signCanvasRef.current) {
       const currentDataURL = signCanvasRef.current
@@ -50,7 +50,9 @@ export default function AttendanceForm() {
     { value: string; label: string }[]
   >([]);
   const [student, setStudent] = useState<string>("");
-  const [initialCanvasState, setInitialCanvasState] = useState<string | null>(null);
+  const [initialCanvasState, setInitialCanvasState] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     const updateCanvasSize = () => {
@@ -59,37 +61,32 @@ export default function AttendanceForm() {
         const width = containerWidth;
         const height = width * 0.5;
         setCanvasSize({ width, height });
-        
-        if (signCanvasRef.current) {
-          signCanvasRef.current.clear();
-          
-          if (initialCanvasState && initialCanvasState !== "") {
-            setTimeout(() => {
-              const newInitialDataURL = signCanvasRef.current
-                ?.getTrimmedCanvas()
-                .toDataURL("image/png");
-              setInitialCanvasState(newInitialDataURL || null);
-            }, 100);
-          }
-        }
       }
     };
 
     updateCanvasSize();
-    
-    window.addEventListener('resize', updateCanvasSize);
-    
+
+    window.addEventListener("resize", updateCanvasSize);
+
     return () => {
-      window.removeEventListener('resize', updateCanvasSize);
+      window.removeEventListener("resize", updateCanvasSize);
     };
-  }, [initialCanvasState]);
+  }, []);
 
   useEffect(() => {
-    if (signCanvasRef.current) {
-      const initialDataURL = signCanvasRef.current
-        .getTrimmedCanvas()
-        .toDataURL("image/png");
-      setInitialCanvasState(initialDataURL);
+    if (
+      signCanvasRef.current &&
+      canvasSize.width > 0 &&
+      canvasSize.height > 0
+    ) {
+      try {
+        const initialDataURL = signCanvasRef.current
+          .getTrimmedCanvas()
+          .toDataURL("image/png");
+        setInitialCanvasState(initialDataURL);
+      } catch (error) {
+        console.error("Error initializing canvas:", error);
+      }
     }
   }, [canvasSize.width, canvasSize.height]);
 
@@ -97,7 +94,7 @@ export default function AttendanceForm() {
     if (signCanvasRef.current) {
       signCanvasRef.current.clear();
     }
-  }
+  };
 
   useEffect(() => {
     const fetchStudentOptions = async () => {
@@ -177,20 +174,27 @@ export default function AttendanceForm() {
 
             <div className="space-y-2">
               <p className="text-2xl font-bold">Sign here:</p>
-              <p className="text-sm text-gray-500">someone mistakenly pressed the wrong person last time so i added this 🙁</p>
+              <p className="text-sm text-gray-500">
+                someone mistakenly pressed the wrong person last time so i added
+                this 🙁
+              </p>
               <div ref={containerRef} className="w-full border-2">
                 {canvasSize.width > 0 && (
-                  <SignatureCanvas
+                  <SignaturePad
                     penColor="black"
                     canvasProps={{
                       width: canvasSize.width,
                       height: canvasSize.height,
-                      className: "sigCanvas"
+                      className: "sigCanvas",
                     }}
-                    ref={signCanvasRef}
+                    ref={(ref) => {
+                      signCanvasRef.current = ref;
+                    }}
                   />
                 )}
-                <Button onClick={handleClear} className="m-2 w-3/12 h-1/12" >Clear <Eraser/> </Button>
+                <Button onClick={handleClear} className="m-2 w-3/12 h-1/12">
+                  Clear <Eraser />{" "}
+                </Button>
               </div>
             </div>
 
