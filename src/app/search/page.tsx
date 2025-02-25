@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { CheckCircle, XCircle } from "lucide-react";
 import CopyToClipboardButton from "@/components/ui/copytoclipboard";
+import Image from "next/image";
 
 export default async function SearchPage({
   searchParams,
@@ -37,6 +38,8 @@ export default async function SearchPage({
             <TableRow>
               <TableHead className="font-semibold text-gray-700">Student Name</TableHead>
               <TableHead className="font-semibold text-gray-700">Attended</TableHead>
+              <TableHead className="font-semibold text-gray-700">Signature</TableHead>
+              <TableHead className="font-semibold text-gray-700">Timestamp</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -50,6 +53,30 @@ export default async function SearchPage({
                     <CheckCircle className="w-5 h-5 text-green-500" />
                   ) : (
                     <XCircle className="w-5 h-5 text-red-500" />
+                  )}
+                </TableCell>
+                <TableCell>
+                  {student.attended && student.signatureURL ? (
+                    <div className="relative w-32 h-16 border rounded">
+                      <Image 
+                        src={student.signatureURL} 
+                        alt={`${student.name}'s signature`}
+                        fill
+                        style={{ objectFit: "contain" }}
+                        sizes="128px"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">No signature</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {student.attended && student.timestamp ? (
+                    <span className="text-sm text-gray-600">
+                      {new Date(student.timestamp).toLocaleString()}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">-</span>
                   )}
                 </TableCell>
               </TableRow>

@@ -2,6 +2,7 @@
 import { z } from "zod";
 import type { ActionResponse, AttendanceFormData } from "@/types/attendance";
 import { prisma } from "@/lib/prisma";
+import { utapi } from "@/lib/uploadthing";
 
 const attendanceSchema = z.object({
   code: z.coerce.number().int(),
@@ -28,8 +29,6 @@ export async function submitAttendance(
         errors: validatedData.error.flatten().fieldErrors,
       };
     }
-
-    console.log("Signature Data:", validatedData.data.signature);
 
     const student = await prisma.student.findFirst({
       where: {
@@ -58,10 +57,32 @@ export async function submitAttendance(
       };
     }
 
+    // Convert data URL to File object for uploading
+    const signatureDataURL = validatedData.data.signature;
+    const base64Data = signatureDataURL.split(',')[1];
+    const signatureBuffer = Buffer.from(base64Data, 'base64');
+    
+    // Create a File object from the buffer
+    const signatureFile = new File([signatureBuffer], `signature-${student.id}-${validatedData.data.code}.png`, {
+      type: 'image/png',
+    });
+
+    // Upload the signature to UploadThing
+    const uploadResult = await utapi.uploadFiles(signatureFile);
+    
+    if (!uploadResult.data) {
+      return {
+        success: false,
+        message: `Failed to upload signature: ${uploadResult.error?.message || "Unknown error"} 😔`,
+      };
+    }
+
+    // Create attendance record with signature URL
     const attendance = await prisma.attendance.create({
       data: {
         studentId: student.id,
         eventId: validatedData.data.code,
+        signatureURL: uploadResult.data.url,
       },
     });
 

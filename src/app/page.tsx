@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { submitAttendance, getStudentOptions } from "@/actions/attendance";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Eraser } from "lucide-react";
 import type { ActionResponse } from "@/types/attendance";
 import Combobox from "@/components/ui/combobox";
 import SignatureCanvas from "react-signature-canvas";
@@ -21,6 +21,10 @@ import SignatureCanvas from "react-signature-canvas";
 const initialState: ActionResponse = { success: false, message: "" };
 
 export default function AttendanceForm() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const signCanvasRef = useRef<SignatureCanvas | null>(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  
   async function formAction(currentState: ActionResponse, formData: FormData) {
     if (signCanvasRef.current) {
       const currentDataURL = signCanvasRef.current
@@ -42,35 +46,60 @@ export default function AttendanceForm() {
 
   const [state, action, isPending] = useActionState(formAction, initialState);
 
-  const [studentOptions, setStudentOptions] = React.useState<
+  const [studentOptions, setStudentOptions] = useState<
     { value: string; label: string }[]
   >([]);
-  const [student, setStudent] = React.useState<string>("");
-  const [signURL, setSignURL] = React.useState<string>("");
-  const [initialCanvasState, setInitialCanvasState] = React.useState<
-    string | null
-  >(null);
-  const signCanvasRef = React.useRef<SignatureCanvas | null>(null);
+  const [student, setStudent] = useState<string>("");
+  const [initialCanvasState, setInitialCanvasState] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        const width = containerWidth;
+        const height = width * 0.5;
+        setCanvasSize({ width, height });
+        
+        if (signCanvasRef.current) {
+          signCanvasRef.current.clear();
+          
+          if (initialCanvasState && initialCanvasState !== "") {
+            setTimeout(() => {
+              const newInitialDataURL = signCanvasRef.current
+                ?.getTrimmedCanvas()
+                .toDataURL("image/png");
+              setInitialCanvasState(newInitialDataURL || null);
+            }, 100);
+          }
+        }
+      }
+    };
+
+    updateCanvasSize();
+    
+    window.addEventListener('resize', updateCanvasSize);
+    
+    return () => {
+      window.removeEventListener('resize', updateCanvasSize);
+    };
+  }, [initialCanvasState]);
+
+  useEffect(() => {
     if (signCanvasRef.current) {
       const initialDataURL = signCanvasRef.current
         .getTrimmedCanvas()
         .toDataURL("image/png");
       setInitialCanvasState(initialDataURL);
     }
-  }, []);
+  }, [canvasSize.width, canvasSize.height]);
 
-  const handleGenerate = () => {
+  const handleClear = () => {
     if (signCanvasRef.current) {
-      const trimmedDataURL = signCanvasRef.current
-        .getTrimmedCanvas()
-        .toDataURL("image/png");
-      setSignURL(trimmedDataURL);
+      signCanvasRef.current.clear();
     }
-  };
+  }
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchStudentOptions = async () => {
       try {
         const options = await getStudentOptions();
@@ -91,7 +120,7 @@ export default function AttendanceForm() {
     }
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (student) {
       localStorage.setItem("student", JSON.stringify(student));
     }
@@ -148,16 +177,21 @@ export default function AttendanceForm() {
 
             <div className="space-y-2">
               <p className="text-2xl font-bold">Sign here:</p>
-              <SignatureCanvas
-                penColor="green"
-                canvasProps={{
-                  width: "100%",
-                  height: "auto",
-                  className: "sigCanvas border-2 w-full aspect-[3/2]",
-                }}
-                ref={signCanvasRef}
-                onEnd={handleGenerate}
-              />
+              <p className="text-sm text-gray-500">someone mistakenly pressed the wrong person last time so i added this 🙁</p>
+              <div ref={containerRef} className="w-full border-2">
+                {canvasSize.width > 0 && (
+                  <SignatureCanvas
+                    penColor="black"
+                    canvasProps={{
+                      width: canvasSize.width,
+                      height: canvasSize.height,
+                      className: "sigCanvas"
+                    }}
+                    ref={signCanvasRef}
+                  />
+                )}
+                <Button onClick={handleClear} className="m-2 w-3/12 h-1/12" >Clear <Eraser/> </Button>
+              </div>
             </div>
 
             {state?.message && (
@@ -171,7 +205,6 @@ export default function AttendanceForm() {
               {isPending ? "Registering..." : "Register"}
             </Button>
           </form>
-          {signURL && <img src={signURL} alt="Signature" className="mt-4" />}
         </CardContent>
       </Card>
     </div>
