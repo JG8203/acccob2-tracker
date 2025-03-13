@@ -15,7 +15,6 @@ export async function submitEvaluation(
   formData: FormData
 ): Promise<ActionResponse> {
   try {
-  try {
     const rawData: EvaluationFormData = {
       name: formData.get("name") as string,
       signature: formData.get("signature") as string,
