@@ -11,6 +11,7 @@ model Student {
   id         Int          @id @default(autoincrement())
   name       String
   attendance Attendance[]
+  evaluations Evaluation[]
 }
 
 model Event {
@@ -32,4 +33,15 @@ model Attendance {
   @@unique([studentId, eventId])
   @@index([studentId])
   @@index([eventId])
+}
+
+model Evaluation {
+  id                 String   @id @default(uuid())
+  student            Student  @relation(fields: [studentId], references: [id])
+  studentId          Int
+  timestamp          DateTime @default(now())
+  signatureURL       String
+  evaluationProofURL String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
