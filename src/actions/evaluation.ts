@@ -15,6 +15,7 @@ export async function submitEvaluation(
   formData: FormData
 ): Promise<ActionResponse> {
   try {
+  try {
     const rawData: EvaluationFormData = {
       name: formData.get("name") as string,
       signature: formData.get("signature") as string,
@@ -135,6 +136,13 @@ export async function submitEvaluation(
       success: false,
       message: "An unexpected error occurred 😔",
     };
+  } catch (error) {
+    console.error("Error submitting evaluation:", error);
+    return {
+      success: false,
+      message: "An unexpected error occurred 😔",
+    };
+  }
   }
 }
 

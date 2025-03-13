@@ -36,29 +36,37 @@ export default function EvaluationForm() {
   const [showResubmitDialog, setShowResubmitDialog] = useState(false);
 
   async function formAction(currentState: ActionResponse, formData: FormData) {
-    if (!signCanvasRef.current || !evaluationImage) {
+    try {
+      if (!signCanvasRef.current || !evaluationImage) {
+        return {
+          success: false,
+          message: evaluationImage 
+            ? "Signature canvas not initialized" 
+            : "Please upload an evaluation proof image",
+        };
+      }
+
+      const currentDataURL = signCanvasRef.current
+        .getTrimmedCanvas()
+        .toDataURL("image/png");
+
+      if (currentDataURL === initialCanvasState) {
+        return {
+          success: false,
+          message: "No changes detected in the signature canvas.",
+        };
+      }
+
+      formData.append("signature", currentDataURL);
+      formData.append("evaluationProof", evaluationImage);
+      return await submitEvaluation(currentState, formData);
+    } catch (error) {
+      console.error("Error in form action:", error);
       return {
         success: false,
-        message: evaluationImage 
-          ? "Signature canvas not initialized" 
-          : "Please upload an evaluation proof image",
+        message: "An unexpected error occurred during form submission",
       };
     }
-
-    const currentDataURL = signCanvasRef.current
-      .getTrimmedCanvas()
-      .toDataURL("image/png");
-
-    if (currentDataURL === initialCanvasState) {
-      return {
-        success: false,
-        message: "No changes detected in the signature canvas.",
-      };
-    }
-
-    formData.append("signature", currentDataURL);
-    formData.append("evaluationProof", evaluationImage);
-    return await submitEvaluation(currentState, formData);
   }
 
   const [state, action, isPending] = useActionState(formAction, initialState);
@@ -71,16 +79,22 @@ export default function EvaluationForm() {
   }, [state]);
 
   const handleConfirmResubmission = async () => {
-    if (!signCanvasRef.current || !evaluationImage) return;
-    
-    const formData = new FormData();
-    formData.append("name", student);
-    formData.append("signature", signCanvasRef.current.getTrimmedCanvas().toDataURL("image/png"));
-    formData.append("evaluationProof", evaluationImage);
-    formData.append("confirmResubmission", "true");
-    
-    await submitEvaluation(state, formData);
-    setShowResubmitDialog(false);
+    try {
+      if (!signCanvasRef.current || !evaluationImage) return;
+      
+      const formData = new FormData();
+      formData.append("name", student);
+      formData.append("signature", signCanvasRef.current.getTrimmedCanvas().toDataURL("image/png"));
+      formData.append("evaluationProof", evaluationImage);
+      formData.append("confirmResubmission", "true");
+      
+      const result = await submitEvaluation(state, formData);
+      if (result.success) {
+        setShowResubmitDialog(false);
+      }
+    } catch (error) {
+      console.error("Error during resubmission:", error);
+    }
   };
 
   const handleCancelResubmission = () => {
