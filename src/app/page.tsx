@@ -39,6 +39,13 @@ export default function HomePage() {
             </Button>
             
             <Button 
+              onClick={() => router.push('/evaluation-tracker')}
+              className="w-full h-16 text-lg"
+            >
+              Evaluation Tracker
+            </Button>
+            
+            <Button 
               onClick={() => router.push('/tracker')}
               className="w-full h-16 text-lg"
               variant="outline"
