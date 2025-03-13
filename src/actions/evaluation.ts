@@ -184,14 +184,14 @@ export async function getAllEvaluations() {
     
     return {
       success: true,
-      evaluations: evaluations.map(eval => ({
-        id: eval.id,
-        studentId: eval.studentId,
-        studentName: eval.student.name,
-        signatureURL: eval.signatureURL,
-        evaluationProofURL: eval.evaluationProofURL,
-        createdAt: eval.createdAt,
-        updatedAt: eval.updatedAt,
+      evaluations: evaluations.map((evaluation) => ({
+        id: evaluation.id,
+        studentId: evaluation.studentId,
+        studentName: evaluation.student.name,
+        signatureURL: evaluation.signatureURL,
+        evaluationProofURL: evaluation.evaluationProofURL,
+        createdAt: evaluation.createdAt,
+        updatedAt: evaluation.updatedAt,
       })),
     };
   } catch (error) {
