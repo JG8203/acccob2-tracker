@@ -75,11 +75,11 @@ export async function submitEvaluation(
     }
 
     const evaluation = await prisma.evaluation.create({
-       {
-        studentId: student.id,
-        signatureURL: signatureUploadResult.data.url,
-        evaluationProofURL: evaluationProofUploadResult.data.url,
-      },
+        data: {
+          studentId: student.id,
+          signatureURL: signatureUploadResult.data.url,
+          evaluationProofURL: evaluationProofUploadResult.data.url,
+        }
     });
 
     if (!evaluation) {
