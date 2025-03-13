@@ -1,13 +1,14 @@
 "use server";
+
 import { z } from "zod";
 import type { ActionResponse, EvaluationFormData } from "@/types/evaluation";
 import { prisma } from "@/lib/prisma";
 import { utapi } from "@/lib/uploadthing";
 
 const evaluationSchema = z.object({
-  name: z.string().min(1),
-  signature: z.string().min(1),
-  evaluationProof: z.string().min(1),
+  name: z.string().min(1, "Name is required"),
+  signature: z.string().min(1, "Signature is required"),
+  evaluationProof: z.string().min(1, "Evaluation proof is required"),
 });
 
 export async function submitEvaluation(
@@ -15,6 +16,7 @@ export async function submitEvaluation(
   formData: FormData
 ): Promise<ActionResponse> {
   try {
+    // Parse and validate form data
     const rawData: EvaluationFormData = {
       name: formData.get("name") as string,
       signature: formData.get("signature") as string,
@@ -30,10 +32,9 @@ export async function submitEvaluation(
       };
     }
 
+    // Find the student
     const student = await prisma.student.findFirst({
-      where: {
-        name: validatedData.data.name,
-      },
+      where: { name: validatedData.data.name },
     });
 
     if (!student) {
@@ -45,12 +46,10 @@ export async function submitEvaluation(
 
     // Check if student already has an evaluation
     const existingEvaluation = await prisma.evaluation.findFirst({
-      where: {
-        studentId: student.id,
-      },
+      where: { studentId: student.id },
     });
 
-    // If this is a confirmed resubmission, we'll proceed
+    // Check if this is a confirmed resubmission
     const isConfirmedResubmission = formData.get("confirmResubmission") === "true";
 
     // If there's an existing evaluation and resubmission is not confirmed, return early
@@ -62,47 +61,33 @@ export async function submitEvaluation(
       };
     }
 
-    // Process signature
-    const signatureDataURL = validatedData.data.signature;
-    const signatureBase64Data = signatureDataURL.split(',')[1];
-    const signatureBuffer = Buffer.from(signatureBase64Data, 'base64');
-    
-    const signatureFile = new File([signatureBuffer], `signature-eval-${student.id}-${Date.now()}.png`, {
-      type: 'image/png',
-    });
-
-    // Process evaluation proof
-    const evaluationProofDataURL = validatedData.data.evaluationProof;
-    const evaluationProofBase64Data = evaluationProofDataURL.split(',')[1];
-    const evaluationProofBuffer = Buffer.from(evaluationProofBase64Data, 'base64');
-    
-    const evaluationProofFile = new File([evaluationProofBuffer], `eval-proof-${student.id}-${Date.now()}.png`, {
-      type: 'image/png',
-    });
-
-    // Upload both files
-    const [signatureUploadResult, evaluationProofUploadResult] = await Promise.all([
-      utapi.uploadFiles(signatureFile),
-      utapi.uploadFiles(evaluationProofFile)
+    // Process and upload files
+    const [signatureURL, evaluationProofURL] = await Promise.all([
+      processAndUploadImage(
+        validatedData.data.signature, 
+        `signature-eval-${student.id}-${Date.now()}.png`
+      ),
+      processAndUploadImage(
+        validatedData.data.evaluationProof,
+        `eval-proof-${student.id}-${Date.now()}.png`
+      )
     ]);
-    
-    if (!signatureUploadResult.data || !evaluationProofUploadResult.data) {
+
+    if (!signatureURL || !evaluationProofURL) {
       return {
         success: false,
-        message: `Failed to upload files: ${signatureUploadResult.error?.message || evaluationProofUploadResult.error?.message || "Unknown error"} 😔`,
+        message: "Failed to upload files 😔",
       };
     }
 
-    // If there's an existing evaluation, update it; otherwise, create a new one
+    // Create or update the evaluation
     let evaluation;
     if (existingEvaluation && isConfirmedResubmission) {
       evaluation = await prisma.evaluation.update({
-        where: {
-          id: existingEvaluation.id,
-        },
+        where: { id: existingEvaluation.id },
         data: {
-          signatureURL: signatureUploadResult.data.url,
-          evaluationProofURL: evaluationProofUploadResult.data.url,
+          signatureURL,
+          evaluationProofURL,
           updatedAt: new Date(),
         },
       });
@@ -110,8 +95,8 @@ export async function submitEvaluation(
       evaluation = await prisma.evaluation.create({
         data: {
           studentId: student.id,
-          signatureURL: signatureUploadResult.data.url,
-          evaluationProofURL: evaluationProofUploadResult.data.url,
+          signatureURL,
+          evaluationProofURL,
         }
       });
     }
@@ -133,21 +118,50 @@ export async function submitEvaluation(
     console.error("Error submitting evaluation:", error);
     return {
       success: false,
-      message: "An unexpected error occurred 😔",
+      message: `An unexpected error occurred: ${error instanceof Error ? error.message : "Unknown error"} 😔`,
     };
   }
 }
 
-export async function getStudentOptions(): Promise<
-  { value: string; label: string }[]
-> {
+/**
+ * Helper function to process and upload an image from a data URL
+ */
+async function processAndUploadImage(dataURL: string, filename: string): Promise<string | null> {
   try {
-    const students = await prisma.student.findMany();
-    const studentOptions = students.map((student: { id: number; name: string }) => ({
+    const base64Data = dataURL.split(',')[1];
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    const file = new File([buffer], filename, {
+      type: 'image/png',
+    });
+
+    const uploadResult = await utapi.uploadFiles(file);
+    
+    if (!uploadResult.data) {
+      console.error("Upload failed:", uploadResult.error);
+      return null;
+    }
+
+    return uploadResult.data.url;
+  } catch (error) {
+    console.error("Error processing image:", error);
+    return null;
+  }
+}
+
+/**
+ * Fetches all student options for dropdown selection
+ */
+export async function getStudentOptions(): Promise<{ value: string; label: string }[]> {
+  try {
+    const students = await prisma.student.findMany({
+      orderBy: { name: 'asc' },
+    });
+    
+    return students.map((student) => ({
       value: student.name,
       label: student.name,
     }));
-    return studentOptions;
   } catch (error) {
     console.error("Error fetching student options:", error);
     return [];
