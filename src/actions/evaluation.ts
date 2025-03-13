@@ -167,3 +167,39 @@ export async function getStudentOptions(): Promise<{ value: string; label: strin
     return [];
   }
 }
+
+/**
+ * Fetches all evaluations with student information
+ */
+export async function getAllEvaluations() {
+  try {
+    const evaluations = await prisma.evaluation.findMany({
+      include: {
+        student: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    
+    return {
+      success: true,
+      evaluations: evaluations.map(eval => ({
+        id: eval.id,
+        studentId: eval.studentId,
+        studentName: eval.student.name,
+        signatureURL: eval.signatureURL,
+        evaluationProofURL: eval.evaluationProofURL,
+        createdAt: eval.createdAt,
+        updatedAt: eval.updatedAt,
+      })),
+    };
+  } catch (error) {
+    console.error("Error fetching evaluations:", error);
+    return {
+      success: false,
+      message: "Failed to fetch evaluations",
+      evaluations: [],
+    };
+  }
+}
