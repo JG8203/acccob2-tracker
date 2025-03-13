@@ -136,13 +136,6 @@ export async function submitEvaluation(
       success: false,
       message: "An unexpected error occurred 😔",
     };
-  } catch (error) {
-    console.error("Error submitting evaluation:", error);
-    return {
-      success: false,
-      message: "An unexpected error occurred 😔",
-    };
-  }
   }
 }
 
