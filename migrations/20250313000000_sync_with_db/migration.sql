@@ -1,0 +1,2 @@
+-- This migration syncs the migration history with the current database state
+-- It doesn't make any actual changes to the database structure
