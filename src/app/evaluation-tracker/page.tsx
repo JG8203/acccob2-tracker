@@ -32,7 +32,7 @@ import { Eye, ArrowLeft } from "lucide-react";
 
 interface Evaluation {
   id: string;
-  studentId: string;
+  studentId: number;
   studentName: string;
   signatureURL: string;
   evaluationProofURL: string;
