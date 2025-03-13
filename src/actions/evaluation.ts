@@ -93,13 +93,28 @@ export async function submitEvaluation(
       };
     }
 
-    const evaluation = await prisma.evaluation.create({
+    // If there's an existing evaluation, update it; otherwise, create a new one
+    let evaluation;
+    if (existingEvaluation && isConfirmedResubmission) {
+      evaluation = await prisma.evaluation.update({
+        where: {
+          id: existingEvaluation.id,
+        },
+        data: {
+          signatureURL: signatureUploadResult.data.url,
+          evaluationProofURL: evaluationProofUploadResult.data.url,
+          updatedAt: new Date(),
+        },
+      });
+    } else {
+      evaluation = await prisma.evaluation.create({
         data: {
           studentId: student.id,
           signatureURL: signatureUploadResult.data.url,
           evaluationProofURL: evaluationProofUploadResult.data.url,
         }
-    });
+      });
+    }
 
     if (!evaluation) {
       return {
@@ -110,7 +125,9 @@ export async function submitEvaluation(
 
     return {
       success: true,
-      message: `${validatedData.data.name}'s evaluation has been submitted successfully 🥰`,
+      message: existingEvaluation && isConfirmedResubmission
+        ? `${validatedData.data.name}'s evaluation has been updated successfully 🥰`
+        : `${validatedData.data.name}'s evaluation has been submitted successfully 🥰`,
     };
   } catch (error) {
     console.error("Error submitting evaluation:", error);
