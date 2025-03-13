@@ -34,6 +34,7 @@ export default function EvaluationForm() {
   const [evaluationImage, setEvaluationImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showResubmitDialog, setShowResubmitDialog] = useState(false);
+  const [isResubmitting, setIsResubmitting] = useState(false);
 
   async function formAction(currentState: ActionResponse, formData: FormData) {
     try {
@@ -80,7 +81,9 @@ export default function EvaluationForm() {
 
   const handleConfirmResubmission = async () => {
     try {
-      if (!signCanvasRef.current || !evaluationImage) return;
+      if (!signCanvasRef.current || !evaluationImage || isResubmitting) return;
+      
+      setIsResubmitting(true); // Set loading state to true before submission
       
       const formData = new FormData();
       formData.append("name", student);
@@ -94,6 +97,8 @@ export default function EvaluationForm() {
       }
     } catch (error) {
       console.error("Error during resubmission:", error);
+    } finally {
+      setIsResubmitting(false); // Reset loading state regardless of outcome
     }
   };
 
@@ -321,11 +326,18 @@ export default function EvaluationForm() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={handleCancelResubmission}>
+            <Button 
+              variant="outline" 
+              onClick={handleCancelResubmission}
+              disabled={isResubmitting}
+            >
               Cancel
             </Button>
-            <Button onClick={handleConfirmResubmission}>
-              Update Submission
+            <Button 
+              onClick={handleConfirmResubmission}
+              disabled={isResubmitting}
+            >
+              {isResubmitting ? "Updating..." : "Update Submission"}
             </Button>
           </DialogFooter>
         </DialogContent>
