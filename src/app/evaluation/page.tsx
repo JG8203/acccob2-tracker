@@ -16,6 +16,14 @@ import { CheckCircle2, Eraser, Upload } from "lucide-react";
 import type { ActionResponse } from "@/types/evaluation";
 import Combobox from "@/components/ui/combobox";
 import SignaturePad, { SignaturePadRef } from "@/components/ui/signaturepad";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const initialState: ActionResponse = { success: false, message: "" };
 
@@ -25,6 +33,7 @@ export default function EvaluationForm() {
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [evaluationImage, setEvaluationImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showResubmitDialog, setShowResubmitDialog] = useState(false);
 
   async function formAction(currentState: ActionResponse, formData: FormData) {
     if (!signCanvasRef.current || !evaluationImage) {
@@ -53,6 +62,30 @@ export default function EvaluationForm() {
   }
 
   const [state, action, isPending] = useActionState(formAction, initialState);
+
+  // Handle resubmission confirmation
+  useEffect(() => {
+    if (state?.message === "existing_evaluation" && state?.existingEvaluation) {
+      setShowResubmitDialog(true);
+    }
+  }, [state]);
+
+  const handleConfirmResubmission = async () => {
+    if (!signCanvasRef.current || !evaluationImage) return;
+    
+    const formData = new FormData();
+    formData.append("name", student);
+    formData.append("signature", signCanvasRef.current.getTrimmedCanvas().toDataURL("image/png"));
+    formData.append("evaluationProof", evaluationImage);
+    formData.append("confirmResubmission", "true");
+    
+    await submitEvaluation(state, formData);
+    setShowResubmitDialog(false);
+  };
+
+  const handleCancelResubmission = () => {
+    setShowResubmitDialog(false);
+  };
 
   const [studentOptions, setStudentOptions] = useState<
     { value: string; label: string }[]
@@ -250,7 +283,7 @@ export default function EvaluationForm() {
               )}
             </div>
 
-            {state?.message && (
+            {state?.message && state.message !== "existing_evaluation" && (
               <Alert variant={state.success ? "default" : "destructive"}>
                 {state.success && <CheckCircle2 className="h-4 w-4" />}
                 <AlertDescription>{state.message}</AlertDescription>
@@ -263,6 +296,26 @@ export default function EvaluationForm() {
           </form>
         </CardContent>
       </Card>
+      
+      {/* Resubmission Confirmation Dialog */}
+      <Dialog open={showResubmitDialog} onOpenChange={setShowResubmitDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Evaluation Already Exists</DialogTitle>
+            <DialogDescription>
+              You have already submitted an evaluation. Do you want to update your previous submission?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelResubmission}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmResubmission}>
+              Update Submission
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

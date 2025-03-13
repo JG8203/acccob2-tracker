@@ -43,6 +43,25 @@ export async function submitEvaluation(
       };
     }
 
+    // Check if student already has an evaluation
+    const existingEvaluation = await prisma.evaluation.findFirst({
+      where: {
+        studentId: student.id,
+      },
+    });
+
+    // If this is a confirmed resubmission, we'll proceed
+    const isConfirmedResubmission = formData.get("confirmResubmission") === "true";
+
+    // If there's an existing evaluation and resubmission is not confirmed, return early
+    if (existingEvaluation && !isConfirmedResubmission) {
+      return {
+        success: false,
+        message: "existing_evaluation",
+        existingEvaluation: true,
+      };
+    }
+
     // Process signature
     const signatureDataURL = validatedData.data.signature;
     const signatureBase64Data = signatureDataURL.split(',')[1];

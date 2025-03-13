@@ -10,4 +10,5 @@ export interface ActionResponse {
   errors?: {
     [K in keyof EvaluationFormData]?: string[];
   };
+  existingEvaluation?: boolean;
 }
